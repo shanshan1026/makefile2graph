@@ -67,7 +67,8 @@ enum output_type {
 	output_dot,
 	output_gexf,
 	output_deep,
-	output_list
+	output_list,
+	output_text
 	};
 
 /** a Target */
@@ -381,6 +382,51 @@ static void DumpGraphAsDot(GraphPtr g,FILE* out)
 	fputs("}\n",out);
 	}
 
+/** export text */
+static void DumpGraphAsText(GraphPtr g,FILE* out)
+	{
+	size_t i=0,j=0;
+	
+	fputs("Target:\n",out);
+
+
+	for(i=0; i< g->target_count; ++i)
+		{
+
+		TargetPtr t= g->targets[i];
+		if( !g->show_root && t==g->root ) continue;
+		
+		if(t==g->root)
+			{
+			fprintf(out,
+				"n%zu, name=%s\n",
+				t->id,
+                t->name
+				);
+			}
+		else
+			{
+			fprintf(out,
+				"n%zu, name=%s\n",
+				t->id,
+                t->name
+				);
+			}
+
+		}
+	fputs("Dependence:\n",out);
+	for(i=0; i< g->target_count; ++i)
+		{
+		TargetPtr t= g->targets[i];
+		if( !g->show_root && t==g->root) continue;
+		
+		for(j=0; j< t->n_children; ++j)
+			{
+			TargetPtr c = t->children[j];
+			fprintf(out,"%s -> %s\n", c->name , t->name);
+			}
+		}
+	}
 
 
 /** export a Gephi / Gexf */
@@ -507,6 +553,7 @@ static void usage(FILE* out)
 	fputs("\t-f|--format (format)\n",out);
 	fputs("\t\t(d)ot graphiz dot output format (default).\n",out);
 	fputs("\t\t(x)xml (g)exf XML output (gexf)\n",out);
+	fputs("\t\t(t)text output format\n",out);
 	fputs("\t\t(E) print the deepest indepedent targets.\n",out);
 	fputs("\t\t(L)ist all targets.\n",out);
 	fputs("\t-b|--basename only print file basename.\n",out);
@@ -551,6 +598,7 @@ int main(int argc,char** argv)
 					case 'd':case 'D': out_format = output_dot; break;
 					case 'e':case 'E': out_format = output_deep; break;
 					case 'l':case 'L': out_format = output_list; break;
+					case 't':case 'T': out_format = output_text; break;
 					default:
 						{
 						fprintf(stderr,"Bad value for --format=%s\n",optarg);
@@ -618,6 +666,9 @@ int main(int argc,char** argv)
 			break;
 		case output_list : 
 			DumpGraphAsList(app,stdout);
+			break;
+		case output_text : 
+			DumpGraphAsText(app,stdout);
 			break;
 		case output_dot : 
 		default:
